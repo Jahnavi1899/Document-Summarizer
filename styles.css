@@ -1,0 +1,54 @@
+body{
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.container-fluid {
+    padding: 20px; /* Add padding to the container */
+}
+.large-section {
+    height: 100%; /* Full height of parent container */
+    border: 1px solid #ccc; /* Optional: Add border for visibility */
+    display: flex;
+    flex-direction: column;
+}
+/* .large-section .row {
+    border-bottom: 1px solid #ccc; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+} */
+.top-row {
+    flex: 12; /* 80% height for the top row */
+    border-bottom: 1px solid #ccc;
+}
+.bottom-row {
+    flex: 2; /* 20% height for the bottom row */
+}
+
+.custom-textarea{
+    height: 96%;
+    width: 100%;
+    resize: none;
+    overflow-y: scroll;
+    flex: 1;   
+}
+
+.input-box{
+    display: flex;
+    align-items: flex-start;
+    padding: 10px;
+    height: 100%;
+}
+.custom-button {
+    margin-left: 10px; /* Example margin */
+    padding: 10px 20px; /* Example padding */
+    font-size: 16px; /* Example font size */
+    cursor: pointer; /* Pointer cursor on hover */
+    background-color: #007bff; /* Example background color */
+    color: #fff; /* Example text color */
+    border: none; /* No border */
+    border-radius: 4px; /* Rounded corners */
+    height: 50%;
+    margin-top: 20px;
+}
