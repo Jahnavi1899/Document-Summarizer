@@ -15,3 +15,8 @@ References:
 2. https://medium.com/credera-engineering/build-a-simple-rag-chatbot-with-langchain-b96b233e1b2a
 3. Claude
 4. ChatGPT
+
+ToDo
+1. Add user related pages like login and signup
+2. Add validations
+3. Add logic fro processing uploaded text filea and web pages
