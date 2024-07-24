@@ -8,6 +8,7 @@ Functionality:
 Technologies:
 1. Frontend - React js
 2. Backend - FastAPI
+3. AI - HuggingFace, Langchain
 
 
 References:
