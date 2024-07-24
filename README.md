@@ -8,3 +8,10 @@ Functionality:
 Technologies:
 1. Frontend - React js
 2. Backend - FastAPI
+
+
+References:
+1. DeepLearning.AI - LangChain Chat with Your Data
+2. https://medium.com/credera-engineering/build-a-simple-rag-chatbot-with-langchain-b96b233e1b2a
+3. Claude
+4. ChatGPT
