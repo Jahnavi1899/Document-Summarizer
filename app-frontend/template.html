@@ -9,16 +9,24 @@
 
     </head>
     <body>
+        <!--Header-->
         <div class="container-fluid">
             <h1 class="text-center">Document Summarizer and Q&A App</h1>
         </div>
+        
         <div class="container-fluid" style="height: 90%;">
             <div class="row" style="height: 100%;">
+                <!--Document upload-->
                 <div class="col-md-3" >
                     <div style="height:100%; border: 1px solid #ccc;">
                         <h3 class="text-center">Documents</h3>
+                        <div style="padding: 10px;">
+                            <form id="upload-form" enctype="multipart/form-data">
+                                <input type="file" id="pdfUpload" name="file" accept="application/pdf" style="display: block;width: 100%;">
+                                <button id="file-upload" type="submit" style="margin-top: 10px;">Upload PDF</button>
+                            </form>
+                        </div>
                     </div>
-                    
                 </div>
                 <div class="col-md-9">
                     <div class="large-section">
