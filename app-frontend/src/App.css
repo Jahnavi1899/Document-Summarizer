@@ -59,6 +59,62 @@ body{
   margin-top: 20px;
 }
 
+.messages-container {
+  flex: 6;
+  overflow-y: scroll;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  max-width: 70%;
+}
+
+.user {
+  background-color: #007bff;
+  color: white;
+  align-self: flex-end;
+}
+
+.bot {
+  background-color: #f1f0f0;
+  align-self: flex-start;
+}
+
+.before-upload-chatarea{
+  padding: 20px;
+  flex: 6;
+  align-content: center;
+  text-align: center;
+}
+
+.upload-container{
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  height: 90%;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-section{
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+.clear-history-section{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: auto
+  ;
+}
 /* .App {
   text-align: center;
 }

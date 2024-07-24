@@ -5,6 +5,7 @@ export const SharedContext = createContext();
 export const SharedProvider = ({children}) => {
     const [summary, setSummary] = useState('');
     const [file, setFile] = useState(null);
+    const [chatbotDisabled, setChatbotDisabled] = useState(true)
     
     return (
         <SharedContext.Provider
@@ -12,7 +13,9 @@ export const SharedProvider = ({children}) => {
                 summary, 
                 setSummary,
                 file,
-                setFile
+                setFile,
+                chatbotDisabled,
+                setChatbotDisabled
             }}
         >
             {children}

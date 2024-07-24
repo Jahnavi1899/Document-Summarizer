@@ -6,6 +6,8 @@ export default function ChatBot(){
     const [messages, setMessages] = useState([]);
     const messagesEndRef = useRef(null);
     const { file } = useContext(SharedContext) 
+    // const [isDisabled, setIsDisabled] = useState(true)
+    const { chatbotDisabled } = useContext(SharedContext)
 
     const scrollToBottom = () => {
       messagesEndRef.current?.scrollIntoView({behavior: "smooth"})
@@ -13,8 +15,30 @@ export default function ChatBot(){
 
     useEffect(scrollToBottom, [messages])
 
+    // useEffect(() => {
+    //   setIsDisabled(setChatbotDisabled)}, [setChatbotDisabled])
+
     const handleInputChange = (e) => {
       setQuestion(e.target.value)
+    }
+
+    const renderDiv = () =>{
+      console.log(chatbotDisabled)
+      if(chatbotDisabled){
+        return <div className="col-md-12 before-upload-chatarea">Please upload a document to ask questions!</div>
+      }
+      else{
+        return(
+          <div className="col-md-12 messages-container">
+            {messages.map((message, index) => (
+              <div key={index} className={`message ${message.sender}`}>
+                {message.text}
+              </div>
+            ))}
+            <div ref={messagesEndRef}/>
+          </div>
+        )
+      }
     }
 
     const handleSubmit = async (event) =>{
@@ -47,7 +71,7 @@ export default function ChatBot(){
             if(response.ok){
               const data = await response.json()
               console.log(data)
-              setMessages(messages => [...messages, { text: data.response, sender: 'bot' }]);
+              setMessages(messages => [...messages, { text: data['answer'], sender: 'bot' }]);
             }else {
               console.error('Server responded with status:', response.status)
               const errorText = await response.text()
@@ -63,28 +87,28 @@ export default function ChatBot(){
         <>
             <div className="bottom-row">
             <h3 className="text-center">Ask Me!</h3>
-              <div className="col-md-12" style={{flex: 6, overflowY: "scroll"}}>
+              {/* <div className="col-md-12 messages-container">
                 {messages.map((message, index) => (
-                  <div>
+                  <div key={index} className={`message ${message.sender}`}>
                     {message.text}
                   </div>
                 ))}
                 <div ref={messagesEndRef}/>
-              </div>
-              <div style={{flex: 2}}>
+              </div> */}
+              {renderDiv()}
+              <div className="col-md-12" style={{flex: 2}}>
                 <form className="input-box" onSubmit={handleSubmit}>
                     <textarea 
                       className="custom-textarea"
                       value={question}
                       onChange={handleInputChange}
-                      placeholder="Ask me here.."
+                      placeholder="Type your question here..."
+                      disabled={chatbotDisabled}
                     />
-                    <button type="submit" className="custom-button" onClick={handleSubmit}/>
+                    <button type="submit" className="custom-button" disabled={chatbotDisabled} onClick={handleSubmit}/>
                 </form>
               </div>
-                
-              </div>
-        
+            </div>
         </>
     )
 }

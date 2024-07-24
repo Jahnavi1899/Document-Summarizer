@@ -5,6 +5,7 @@ export default function DocumentUpload(){
     const { file, setFile } = useContext(SharedContext);
     // const [summary, setSummary] = useState('');
     const { setSummary } = useContext(SharedContext);
+    const { chatbotDisabled, setChatbotDisabled} = useContext(SharedContext);
 
     const handleFileChange = (event) =>{
         const selectedFile = event.target.files[0]
@@ -38,6 +39,8 @@ export default function DocumentUpload(){
             console.log(response)
             if (response.ok){
                 console.log("File uploaded successully!")
+                setChatbotDisabled(false)
+                console.log(chatbotDisabled)
                 // console.log(response.json())
                 const data = await response.json()
                 setSummary(data["summary"])
@@ -45,6 +48,7 @@ export default function DocumentUpload(){
                 // return data
             }else{
                 console.log("File not uploaded")
+                alert('Please refresh and try uploading your file again.')
             }
         }
         catch(error){
@@ -52,18 +56,28 @@ export default function DocumentUpload(){
         }
     }
 
+    // const handleClearHistory = () => {
+
+    // }
+
     return (
         <>
             <div style={{ height: "100%", border: "1px solid #ccc" }}>
                 <h3 className="text-center">Documents</h3>
-                <div style={{ padding: 10 }}>
-                    <form onSubmit={handleUpload}>  
-                        <div style={{marginBottom: "10px"}}>
-                            <input type="file" id="pdfUpload" style={{display: "block", width: "100%"}} onChange={handleFileChange}/>
-                        </div>
-                        <button type="submit" >Upload PDF</button>
-                    </form>
-                    
+                <div className="upload-container">
+                    <div className="upload-section">
+                        <form onSubmit={handleUpload}>  
+                            <div style={{marginBottom: "10px"}}>
+                                <input type="file" id="pdfUpload" style={{display: "block", width: "100%"}} onChange={handleFileChange}/>
+                            </div>
+                            <div>
+                                <button type="submit" >Upload PDF</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div className="clear-history-section">
+                        <button>Clear Chat History</button>
+                    </div>
                 </div>
             </div>
         </>

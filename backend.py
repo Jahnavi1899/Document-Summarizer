@@ -59,8 +59,12 @@ class QuestionAnswerRequest(BaseModel):
     filename:str
 
 def query(payload):
-    response = requests.post(MODEL_API_URL, headers=headers, json=payload)
-    return response.json()
+    try:
+        response = requests.post(MODEL_API_URL, headers=headers, json=payload)
+        return response.json()
+    except Exception as e:
+        logger.error(f"Error processing the request: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 def display_text():
@@ -93,11 +97,7 @@ async def upload_file(file: UploadFile):
 
         logger.info(f"size:{len(contents)}")
         pdf_text = convert_to_text(temp_file_path, file.filename, EXTRACTED_TEXT_PATH)
-        # if file.filename.lower().endswith('.pdf'):
-        #     pdf_reader = PdfReader(temp_file_path)
-        #     for page in pdf_reader.pages:
-        #         pdf_text += page.extract_text()
-        # logger.info(f"text: {pdf_text[:1000]}")
+       
         summarized_chunks = []
         document_chunks = create_chunks(pdf_text)
         for chunk in document_chunks:
@@ -194,18 +194,21 @@ def answer_question(request: QuestionAnswerRequest):
 def chatbot(request: QuestionAnswerRequest):
     question = request.question
     filename = request.filename
+    vectordb, llm = None, None
+    repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
     filepath = EXTRACTED_TEXT_PATH + '/' + filename.split('.')[0] + '.txt'
     logger.info(filepath)
-    embeddings, vectordb = create_embeddings(filepath)
-    repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
 
-    llm = HuggingFaceEndpoint(
-        repo_id=repo_id,
-        temperature=0.8,
-        top_k=50,
-        huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN
-    )
+    if not vectordb:
+        embeddings, vectordb = create_embeddings(filepath)
+    
+        llm = HuggingFaceEndpoint(
+            repo_id=repo_id,
+            temperature=0.8,
+            top_k=50,
+            huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN
+        )
 
     memory = ConversationBufferMemory(
         memory_key="chat_history",
@@ -223,3 +226,5 @@ def chatbot(request: QuestionAnswerRequest):
 
     return {"answer": result['answer']}
 
+# @app.post("/clear-chat-history")
+# def clear_chat_history
