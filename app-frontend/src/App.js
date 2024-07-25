@@ -23,7 +23,7 @@ export default function App(){
   return (
     <>
       <div className="container-fluid">
-        <h1 className="text-center">Document Summarizer and Q&amp;A App</h1>
+        <h1 className="text-center" style={{color:"white"}}>Document Summarizer and Q&amp;A App</h1>
       </div>
       <div className="container-fluid" style={{ height: "90%" }}>
         <SharedProvider>

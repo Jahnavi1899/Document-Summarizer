@@ -46,10 +46,8 @@ Please provide an abstractive summary of the above text. The summary should be c
 Summary:
 '''
 
-TEMP_FILE_PATH = "/Users/jahnavi/Documents/Document-summarize-web-app/uploads/"
+TEMP_FILE_PATH = "uploads"
 EXTRACTED_TEXT_PATH = "extracted_text"
-
-# extracted_text/Inside-Out-2.txt
 
 class TextRequest(BaseModel):
     text:str

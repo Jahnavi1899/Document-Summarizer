@@ -6,6 +6,7 @@ export const SharedProvider = ({children}) => {
     const [summary, setSummary] = useState('');
     const [file, setFile] = useState(null);
     const [chatbotDisabled, setChatbotDisabled] = useState(true)
+    const [loader, setLoader] = useState(false)
     
     return (
         <SharedContext.Provider
@@ -15,7 +16,9 @@ export const SharedProvider = ({children}) => {
                 file,
                 setFile,
                 chatbotDisabled,
-                setChatbotDisabled
+                setChatbotDisabled,
+                loader,
+                setLoader
             }}
         >
             {children}
