@@ -111,7 +111,7 @@ export default function ChatBot(){
                 <div ref={messagesEndRef}/>
               </div> */}
               {renderDiv()}
-              <div className="col-md-12" style={{flex: 2}}>
+              <div className="col-md-12" style={{flex: 1}}>
                 <form className="input-box" onSubmit={handleSubmit}>
                     <textarea 
                       className="custom-textarea"
@@ -121,7 +121,7 @@ export default function ChatBot(){
                       disabled={chatbotDisabled}
                     />
                     <button type="submit" className="custom-button" disabled={chatbotDisabled} onClick={handleSubmit}>
-                      <IoSend style={{color: 'black', fontSize: '40px'}}/>
+                      <IoSend style={{color: '#0081a7', fontSize: '40px'}}/>
                     </button>
                 </form>
               </div>

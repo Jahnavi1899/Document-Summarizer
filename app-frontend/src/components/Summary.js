@@ -1,11 +1,16 @@
-import React, {useContext} from "react";
+import React, {useContext, useEffect} from "react";
 import { SharedContext } from "../SharedContext";
 import Loader from './Loader'
 
 export default function Summary(){
-    const { summary } = useContext(SharedContext);
+    const { summary, setSummary } = useContext(SharedContext);
     const { chatbotDisabled } = useContext(SharedContext)
     const { loader } = useContext(SharedContext)
+    const { file } = useContext(SharedContext) 
+
+    // useEffect(() =>{
+    //     setSummary('')
+    //   }, [file])
 
     return (
         <>
@@ -16,7 +21,7 @@ export default function Summary(){
                     Please upload a document to view the summary</div>
                 }
                 {
-                    !chatbotDisabled && <div className="col-md-12" style={{ overflowY: "scroll" }}>
+                    !chatbotDisabled && <div className="col-md-12 summary-container">
                     <div id="text-summary" style={{ margin: 20, color:"#bbd0ff" }}>
                         {summary}
                     </div>

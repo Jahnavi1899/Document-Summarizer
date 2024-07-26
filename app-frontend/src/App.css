@@ -19,8 +19,8 @@ body{
   align-items: center;
 } */
 .top-row {
-  display: flex;
-  flex-direction: column;
+  /* display: flex;
+  flex-direction: column; */
   flex: 1; /* 80% height for the top row */
   border: 1px solid #ccc;
   border-radius: 10px;
@@ -31,6 +31,8 @@ body{
 .bottom-row {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  height: 100%;
   flex: 2; /* 20% height for the bottom row */
   border: 1px solid #ccc;
   border-radius: 10px;
@@ -46,11 +48,33 @@ body{
   flex: 1; 
   border-radius:15px;
   background-color: #f1f0f0;
+  padding: 10px;
+  box-sizing: border-box; 
+}
+
+/* Custom scrollbar styles */
+.custom-textarea::-webkit-scrollbar {
+  width: 12px; /* Adjust the width of the scrollbar */
+}
+
+.custom-textarea::-webkit-scrollbar-track {
+  border-radius: 15px; /* Match the border-radius of the textarea */
+  background: #f1f0f0; /* Background of the scrollbar track */
+}
+
+.custom-textarea::-webkit-scrollbar-thumb {
+  border-radius: 15px; /* Match the border-radius of the textarea */
+  background: #888; /* Color of the scrollbar thumb */
+}
+
+.custom-textarea::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Color of the scrollbar thumb on hover */
 }
 
 .input-box{
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  flex-direction: row;
   padding: 10px;
   height: 100%;
 }
@@ -59,20 +83,43 @@ body{
   /* padding: 10px 20px;  */
   font-size: 16px; /* Example font size */
   cursor: pointer; /* Pointer cursor on hover */
-  background-color: white;
+  background-color: transparent;
   /* color: white;  */
   border: none; /* No border */
   border-radius: 4px; /* Rounded corners */
   height: 50%;
-  margin-top: 20px;
+  /* margin-top: 20px; */
 }
 
 .messages-container {
-  flex: 6;
-  overflow-y: scroll;
+  flex: 4;
+  overflow-y: auto;
   padding: 10px;
   display: flex;
   flex-direction: column;
+  max-height: 412px;
+  background-image: linear-gradient(180deg, #134B70, #433D8B, transparent);
+
+}
+
+/* Scrollbar Track */
+.messages-container::-webkit-scrollbar {
+  width: 8px; /* Adjust width */
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background-image: linear-gradient(180deg, #134B70, #433D8B, transparent);
+  /* background: #f0f0f0;  */
+}
+
+/* Scrollbar Handle */
+.messages-container::-webkit-scrollbar-thumb {
+  background: #888; /* Adjust the scrollbar color */
+  border-radius: 4px; /* Optional: for rounded corners */
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Optional: darker color on hover */
 }
 
 .message {
@@ -138,6 +185,7 @@ body{
   align-content: center;
   flex: 1;
   color: #ccc;
+  padding-top: 8%;
 
 }
 
@@ -172,6 +220,36 @@ textarea::placeholder{
 .message.bot.thinking{
   animation: blinking 1.5s infinite;
 }
+
+.summary-container{
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  /* background-image: linear-gradient(360deg, #134B70, #433D8B, transparent); */
+}
+
+
+/* Scrollbar Track */
+.summary-container::-webkit-scrollbar {
+  width: 8px; /* Adjust width */
+}
+
+.summary-container::-webkit-scrollbar-track {
+  background-image: linear-gradient(360deg, #134B70, #433D8B, transparent);
+  /* background: #f0f0f0;  */
+}
+
+/* Scrollbar Handle */
+.summary-container::-webkit-scrollbar-thumb {
+  background: #888; /* Adjust the scrollbar color */
+  border-radius: 4px; /* Optional: for rounded corners */
+}
+
+.summary-container::-webkit-scrollbar-thumb:hover {
+  background: #555; /* Optional: darker color on hover */
+}
+
 /* .App {
   text-align: center;
 }
