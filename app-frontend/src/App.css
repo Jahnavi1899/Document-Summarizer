@@ -7,7 +7,7 @@ body{
   padding: 20px; /* Add padding to the container */
 }
 .large-section {
-  height: 100%; /* Full height of parent container */
+  height: 85vh; /* Full height of parent container */
   /*border: 1px solid #ccc; /* Optional: Add border for visibility */
   display: flex;
   flex-direction: column;
@@ -27,18 +27,21 @@ body{
   margin-bottom: 10px;
   background-image: linear-gradient(360deg, #134B70, #433D8B, transparent);
   box-shadow: 0 0 10px #6096ba;
+  overflow-y: auto;
 }
 .bottom-row {
   display: flex;
   flex-direction: column;
   align-items: center;
   height: 100%;
-  flex: 2; /* 20% height for the bottom row */
+  flex: 1; /* 20% height for the bottom row */
   border: 1px solid #ccc;
   border-radius: 10px;
   background-image: linear-gradient(180deg, #134B70, #433D8B, transparent);
   box-shadow: 0 0 10px #6096ba;
+  overflow-y: auto;
 }
+
 
 .custom-textarea{
   height: 96%;
@@ -177,7 +180,7 @@ body{
   justify-content: center;
   /* align-items: center;
   margin-top: auto */
-  padding: 10px;
+  /* padding: 10px; */
 }
 
 .summary-upload-message{

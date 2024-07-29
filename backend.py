@@ -63,29 +63,29 @@ class QuestionAnswerRequest(BaseModel):
     question:str
     filename:str
 
-def query(payload):
-    try:
-        response = requests.post(SUMMARIZATION_MODEL_API_URL, headers=headers, json=payload)
-        return response.json()
-    except Exception as e:
-        logger.error(f"Error processing the request: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# def query(payload):
+#     try:
+#         response = requests.post(SUMMARIZATION_MODEL_API_URL, headers=headers, json=payload)
+#         return response.json()
+#     except Exception as e:
+#         logger.error(f"Error processing the request: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
-def convert_to_text(file_path, filename, save_dir):
-    pdf_text = ""
-    if filename.lower().endswith('.pdf'):
-        pdf_reader = PdfReader(file_path)
-        for page in pdf_reader.pages:
-            pdf_text += page.extract_text()
+# def convert_to_text(file_path, filename, save_dir):
+#     pdf_text = ""
+#     if filename.lower().endswith('.pdf'):
+#         pdf_reader = PdfReader(file_path)
+#         for page in pdf_reader.pages:
+#             pdf_text += page.extract_text()
 
-    os.makedirs(save_dir, exist_ok=True)
-    text_filename = os.path.splitext(filename)[0] + ".txt"
-    output_path = os.path.join(save_dir, text_filename)
+#     os.makedirs(save_dir, exist_ok=True)
+#     text_filename = os.path.splitext(filename)[0] + ".txt"
+#     output_path = os.path.join(save_dir, text_filename)
 
-    # Write text to file
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(pdf_text)
-    return pdf_text
+#     # Write text to file
+#     with open(output_path, 'w', encoding='utf-8') as f:
+#         f.write(pdf_text)
+#     return pdf_text
 
 def create_chunks(docs):
     # text_splitter = RecursiveCharacterTextSplitter(
@@ -112,11 +112,11 @@ def LLM(repo_id):
     return llm
 # @app.post("/summarize_text")
 def summarize_text(text_data_chunks):
-    # logger.info("Info inside summarize_text method")
     llm = LLM(repo_id)
 
     file_model_map.update_file_info(UPLOADED_FILE_NAME, 'model', llm)
     logger.info(f"In summarize_text method:{file_model_map.get_file_data(UPLOADED_FILE_NAME)}")
+
     chunk_summary_prompt_template = """
         Please provide a summary of the following chunk of text that includes the main points and any important details.
         {text}
@@ -148,34 +148,18 @@ def summarize_text(text_data_chunks):
 
     return result['output_text']
 
-    # input_data = PROMPT_TEMPLATE.format(text = text_data)
-    # payload = {"inputs": input_data, "parameters":{"max_length": max_length, "min_length":50}}
-    # response = query(payload)
-    # #print(response)
-    # summarized_text = response[0]["summary_text"]
-    # return summarized_text
-
 def create_embeddings(filename):
-    # loader = TextLoader(filename)
-    # documents = loader.load()
-    # text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200, separator=" ")
-    # docs = text_splitter.split_documents(documents)
-    # logger.info(file_model_map.list_files())
-    # logger.info(f"chunk details:{file_model_map.file_model_map}")
-    logger.info(file_model_map.file_model_map)
-    # logger.info(f"Extracted adta:{file_model_map.get(filename)}")
-    docs = file_model_map.get_file_info(filename, 'chunks')#file_model_map[filename]['chunks']
-    logger.info(docs)
+   
+    logger.info(f"Inside create_embeddings: {file_model_map.list_files()}")
+    docs = file_model_map.get_file_info(filename, 'chunks')
+    # logger.info(docs)
     embeddings = HuggingFaceEmbeddings()
     vectordb = FAISS.from_documents(docs, embeddings)
 
     return embeddings, vectordb
 
 def create_conversational_model(filename):
-    # filepath = EXTRACTED_TEXT_PATH + '/' + filename.split('.')[0] + '.txt'
-    # logger.info(filepath)
-
-
+    logger.info(f"Inside create_converstaion_model: {file_model_map.list_files()}")
     embeddings, vectordb = create_embeddings(UPLOADED_FILE_NAME)
     
     llm = HuggingFaceEndpoint(
@@ -197,6 +181,7 @@ def create_conversational_model(filename):
         retriever=retriever,
         memory=memory
     )
+    logger.info(f"Inside create_converstaion_model - after: {file_model_map.list_files()}")
 
     return qa, memory
 
@@ -209,40 +194,25 @@ async def upload_file(file: UploadFile):
     global CLEAR_HISTORY, START_CONV_FLAG, UPLOADED_FILE_NAME
     try:
         contents = await file.read()
-        # logger.info(f"Received file: {file.filename}")
         temp_file_path = os.path.join(TEMP_FILE_PATH, file.filename)
         with open(temp_file_path, "wb") as temp_file:
             temp_file.write(contents)
 
-        # logger.info(f"size:{len(contents)}")
-        # text = convert_to_text(temp_file_path, file.filename, EXTRACTED_TEXT_PATH)
         UPLOADED_FILE_NAME = file.filename.split('.')[0]
         file_model_map.add_file_entry(UPLOADED_FILE_NAME)
-        logger.info(f"In upload_file method:{file_model_map.get_file_data(UPLOADED_FILE_NAME)}")
+        logger.info(f"In upload_file method:{file_model_map.list_files()}")
 
-        # logger.info(f"initialise:{file_model_map.file_model_map}")
 
         loader = PyPDFLoader(temp_file_path)
         docs = loader.load()
 
         chunks = create_chunks(docs)
         file_model_map.update_file_info(UPLOADED_FILE_NAME,'chunks',chunks)
-        logger.info(f"In upload_file method:{file_model_map.get_file_data(UPLOADED_FILE_NAME)}")
+        logger.info(f"In upload_file method after creating chunks:{file_model_map.list_files()}")
 
         # logger.info(f"The model mapping:{file_model_map.file_model_map}")
         final_summary = summarize_text(chunks) 
-        
-        # logger.info(f"The model mapping:{file_model_map.file_model_map}")
-        # logger.info(file_model_map) 
-        # summarized_chunks = []
-        # document_chunks = create_chunks(docs)
-        # for chunk in document_chunks:
-        #     chunk_summary = summarize_text(chunk, 1000)
-        #     summarized_chunks.append(chunk_summary)
-
-        # if len(summarized_chunks) > 1:
-        #     combined_summary = " ".join(summarized_chunks)
-        #     final_summary = summarize_text(combined_summary, 1000)
+        logger.info(f"In upload_file method after summarizing text:{file_model_map.list_files()}")
 
         
         CLEAR_HISTORY = True
@@ -256,53 +226,43 @@ async def upload_file(file: UploadFile):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/question-answer")
-def answer_question(request: QuestionAnswerRequest):
-    question = request.question
-    filename = request.filename
+# def answer_question(request: QuestionAnswerRequest):
+#     question = request.question
+#     filename = request.filename
 
-    filepath = EXTRACTED_TEXT_PATH + '/' + filename.split('.')[0] + '.txt'
-    # logger.info(filepath)
-    embeddings, vectordb = create_embeddings(filepath)
-    #repo_id = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+#     filepath = EXTRACTED_TEXT_PATH + '/' + filename.split('.')[0] + '.txt'
+#     embeddings, vectordb = create_embeddings(filepath)
+#     llm = file_model_map[UPLOADED_FILE_NAME]['model']
 
-    # llm = HuggingFaceEndpoint(
-    #     repo_id=repo_id,
-    #     temperature=0.8,
-    #     top_k=50,
-    #     huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN
-    # )
+#     template="""
+#     Use the following piece of context to answer the questions about their life.
+#     Use following piece of context to answer the question. 
+#     If you dont know the answer, just say you don't know.
+#     Keep the answer within 3 sentences and complete the answer.
 
-    llm = file_model_map[UPLOADED_FILE_NAME]['model']
+#     Context: {context}
+#     Question: {question}
+#     Answer:
 
-    template="""
-    Use the following piece of context to answer the questions about their life.
-    Use following piece of context to answer the question. 
-    If you dont know the answer, just say you don't know.
-    Keep the answer within 3 sentences and complete the answer.
+#     """
 
-    Context: {context}
-    Question: {question}
-    Answer:
+#     prompt = PromptTemplate(
+#         template=template,
+#         input_variables=["context", "question"]
+#     )
 
-    """
+#     rag_chain = (
+#         {"context":vectordb.as_retriever(), "question": RunnablePassthrough()}
+#         | prompt
+#         | llm
+#         | StrOutputParser()
+#     )
 
-    prompt = PromptTemplate(
-        template=template,
-        input_variables=["context", "question"]
-    )
-
-    rag_chain = (
-        {"context":vectordb.as_retriever(), "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
-
-    result = rag_chain.invoke(question)
-    # logger.info(result)
-    # logger.info(similar_docs)
+#     result = rag_chain.invoke(question)
+#     # logger.info(result)
+#     # logger.info(similar_docs)
    
-    return {"answer":result}
+#     return {"answer":result}
     
 @app.post("/chatbot")
 def chatbot(request: QuestionAnswerRequest):
@@ -310,7 +270,7 @@ def chatbot(request: QuestionAnswerRequest):
     filename = request.filename
     try:
         fileName = filename.split('.')[0]
-        logger.info(f"In chatbot method:{file_model_map.get_file_data(UPLOADED_FILE_NAME)}")
+        logger.info(f"In chatbot method:{file_model_map.list_files()}")
 
         if file_model_map.get_file_info(fileName, 'qa') == None:
             qa, memory = create_conversational_model(filename)

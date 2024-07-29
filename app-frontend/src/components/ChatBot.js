@@ -26,6 +26,13 @@ export default function ChatBot(){
       setQuestion(e.target.value)
     }
 
+    const handleKeyPress = (e) => {
+      if(e.key === 'Enter'){
+        e.preventDefault()
+        handleSubmit(e)
+      }
+    }
+
     const renderDiv = () =>{
       console.log(chatbotDisabled)
       if(chatbotDisabled){
@@ -117,6 +124,7 @@ export default function ChatBot(){
                       className="custom-textarea"
                       value={question}
                       onChange={handleInputChange}
+                      onKeyDown={handleKeyPress}
                       placeholder="Type your question here..."
                       disabled={chatbotDisabled}
                     />

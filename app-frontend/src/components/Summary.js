@@ -8,9 +8,9 @@ export default function Summary(){
     const { loader } = useContext(SharedContext)
     const { file } = useContext(SharedContext) 
 
-    // useEffect(() =>{
-    //     setSummary('')
-    //   }, [file])
+    useEffect(() =>{
+        setSummary('')
+      }, [file, setSummary])
 
     return (
         <>
