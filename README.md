@@ -6,10 +6,9 @@ Functionality:
 3. The user can ask any question related to the document uploaded using a chatbot.
    
 Technologies:
-1. Frontend - React js
+1. Frontend - React JS
 2. Backend - FastAPI
 3. AI - HuggingFace, Langchain
-
 
 References:
 1. DeepLearning.AI - LangChain Chat with Your Data
@@ -17,7 +16,7 @@ References:
 3. Claude
 4. ChatGPT
 
-ToDo
-1. Add user related pages like login and signup
+Todo
+1. Add user related pages like login and signup.
 2. Add validations
-3. Add logic fro processing uploaded text filea and web pages
+3. Add logic for processing uploaded text file and web pages
