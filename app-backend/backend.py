@@ -24,6 +24,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.chains import load_summarize_chain
 from langchain_community.document_loaders import PyPDFLoader
 from data_models import FileModelManage
+from transformers import AutoTokenizer
 load_dotenv()
 
 app = FastAPI()
@@ -55,6 +56,7 @@ CLEAR_HISTORY = False
 UPLOADED_FILE_NAME = ""
 START_CONV_FLAG = False
 file_model_map = FileModelManage()
+tokenizer = AutoTokenizer.from_pretrained(repo_id)
 
 class TextRequest(BaseModel):
     text:str
@@ -93,8 +95,8 @@ def create_chunks(docs):
     #     chunk_overlap = 200
     # )
     text_splitter = TokenTextSplitter(
-        chunk_size = 4000,
-        chunk_overlap = 200
+        chunk_size = 400,
+        chunk_overlap = 50
     )
     # text_chunks = text_splitter.split_text(docs)
     text_chunks = text_splitter.split_documents(docs)
@@ -106,16 +108,17 @@ def LLM(repo_id):
         temperature=0.8,
         top_k=50,
         huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN,
-        model_kwargs={'max_length': 32768}
+        # model_kwargs={'max_length': 32768}
     )
 
     return llm
+
 # @app.post("/summarize_text")
 def summarize_text(text_data_chunks):
     llm = LLM(repo_id)
 
     file_model_map.update_file_info(UPLOADED_FILE_NAME, 'model', llm)
-    logger.info(f"In summarize_text method:{file_model_map.get_file_data(UPLOADED_FILE_NAME)}")
+    # logger.info(f"In summarize_text method:{file_model_map.get_file_data(UPLOADED_FILE_NAME)}")
 
     chunk_summary_prompt_template = """
         Please provide a summary of the following chunk of text that includes the main points and any important details.
@@ -124,9 +127,9 @@ def summarize_text(text_data_chunks):
 
     complete_summary_prompt_template = """
               Write a concise summary of the following text delimited by triple backquotes.
-              Return your response in bullet points which covers the key points of the text.
+              Return your response which covers the key points of the text.
               ```{text}```
-              BULLET POINT SUMMARY:
+              SUMMARY:
               """
     
     chunk_summary_prompt = PromptTemplate(
