@@ -26,7 +26,7 @@ export default function DocumentUpload(){
 
     const uploadFile = async (file) =>{
         setLoader(true)
-        setChatbotDisabled(true)
+        // setChatbotDisabled(true)
         console.log("Inside uploadFile method")
         const formData = new FormData()
         formData.append('file', file)

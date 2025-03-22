@@ -7,7 +7,7 @@ export default function ChatBot(){
     const [messages, setMessages] = useState([]);
     const messagesEndRef = useRef(null);
     const { file } = useContext(SharedContext) 
-    const { chatbotDisabled } = useContext(SharedContext)
+    const { chatbotDisabled } = false;//useContext(SharedContext)
     const { setLoader } = useContext(SharedContext)
     const [ botMessage, setBotMessage ] = useState(null)
 
@@ -71,12 +71,13 @@ export default function ChatBot(){
 
         var request = {
           "question" : question,
-          "filename": file.name
+          "filename": file.name,
+          "user": "User1"
         }
 
         try{
           console.log("Before the API call")
-            const endpoint = 'http://127.0.0.1:8000/chatbot'
+            const endpoint = 'http://127.0.0.1:8000/chat'
             const response = await fetch(endpoint, {
               method: "POST",
               headers: {
@@ -126,9 +127,9 @@ export default function ChatBot(){
                       onChange={handleInputChange}
                       onKeyDown={handleKeyPress}
                       placeholder="Type your question here..."
-                      disabled={chatbotDisabled}
+                      // disabled={chatbotDisabled}
                     />
-                    <button type="submit" className="custom-button" disabled={chatbotDisabled} onClick={handleSubmit}>
+                    <button type="submit" className="custom-button"  onClick={handleSubmit}>
                       <IoSend style={{color: '#0081a7', fontSize: '40px'}}/>
                     </button>
                 </form>
