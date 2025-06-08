@@ -71,8 +71,8 @@ export default function ChatBot(){
 
         var request = {
           "question" : question,
-          "filename": file.name,
-          "user": "User1"
+          // "filename": file.name,
+          // "user": "User1"
         }
 
         try{

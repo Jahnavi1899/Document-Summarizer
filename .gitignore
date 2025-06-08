@@ -7,3 +7,5 @@ lib/
 lib64/
 /app-backend/trial.ipynb
 /app-backend/trial.py
+/app-backend/.env
+/uploads/*
