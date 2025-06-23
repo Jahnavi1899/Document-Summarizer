@@ -3,7 +3,6 @@ import os
 import uuid
 import logging
 from celery import Celery # This needs to be imported, or from .celery_app import celery_app
-from pymongo import MongoClient
 import datetime
 from dotenv import load_dotenv
 load_dotenv()
@@ -39,7 +38,7 @@ def _update_task_status(task_id: str, updates: dict):
         task_status_collection = client[os.getenv("DB_NAME")]['task_status']
         task_status_collection.update_one(
             {'_id': task_id},
-            {'$set': {**updates, 'last_updated_at': datetime.datetime.utcnow()}},
+            {'$set': {**updates, 'last_updated_at': datetime.datetime.now(datetime.timezone.utc)}},
             upsert=True
         )
     except Exception as e:
@@ -48,6 +47,43 @@ def _update_task_status(task_id: str, updates: dict):
         pass
         # if client:
         #     client.close()
+
+# --- Helper to check if both tasks are completed and update overall status ---
+def _check_and_update_overall_status(task_id: str):
+    client = None
+    try:
+        client = _get_mongodb_client_worker()
+        task_status_collection = client[os.getenv("DB_NAME")]['task_status']
+        
+        # Get current status
+        status_doc = task_status_collection.find_one({'_id': task_id})
+        if not status_doc:
+            logger.warning(f"Task {task_id}: No status document found")
+            return
+        
+        summary_status = status_doc.get('summary_status')
+        rag_status = status_doc.get('rag_status')
+        
+        logger.info(f"Task {task_id}: Checking overall status - Summary: {summary_status}, RAG: {rag_status}")
+        
+        # Check if both tasks are completed
+        if summary_status == 'completed' and rag_status == 'completed':
+            _update_task_status(task_id, {'overall_status': 'completed'})
+            logger.info(f"Task {task_id}: Both summary and RAG completed, setting overall_status to completed")
+        elif summary_status == 'failed' or rag_status == 'failed':
+            _update_task_status(task_id, {'overall_status': 'failed'})
+            logger.info(f"Task {task_id}: One or both tasks failed, setting overall_status to failed")
+        else:
+            # Still processing - ensure overall status is processing
+            current_overall = status_doc.get('overall_status')
+            if current_overall != 'processing':
+                _update_task_status(task_id, {'overall_status': 'processing'})
+                logger.info(f"Task {task_id}: Tasks still processing, setting overall_status to processing")
+            
+    except Exception as e:
+        logger.error(f"Failed to check and update overall status for {task_id}: {e}", exc_info=True)
+    finally:
+        pass
 
 # --- Celery Task Definitions ---
 
@@ -97,13 +133,17 @@ def process_summary_task(self, file_path: str, document_id: str, task_id: str):
         _update_task_status(task_id, {'summary_status': 'completed', 'summary_text': summary_result})
         logger.info(f"Task {task_id}: Summary completed for document {document_id}.")
 
+        # Check if both tasks are completed and update overall status
+        _check_and_update_overall_status(task_id)
+
         # Chain to the RAG task immediately after summary (assuming it's sequential)
         # It's crucial that this task is called with .delay() to be run by Celery
         # process_rag_task.delay(file_path, document_id, task_id)
 
     except Exception as e:
         logger.error(f"Task {task_id}: Summary processing failed for document {document_id}: {e}", exc_info=True)
-        _update_task_status(task_id, {'summary_status': 'failed', 'error_message': str(e), 'overall_status': 'failed'})
+        _update_task_status(task_id, {'summary_status': 'failed', 'error_message': str(e)})
+        _check_and_update_overall_status(task_id)  # Check overall status even on failure
         raise self.retry(exc=e) # Re-raise for Celery retry mechanism
     finally:
         pass
@@ -142,12 +182,16 @@ def process_rag_task(self, file_path: str, document_id: str, task_id: str):
         vector_store = _get_vector_store_worker()
         vector_store.add_documents(rag_chunks) # This handles embedding and insertion
 
-        _update_task_status(task_id, {'rag_status': 'completed', 'rag_ready': True, 'overall_status': 'completed'})
+        _update_task_status(task_id, {'rag_status': 'completed', 'rag_ready': True})
         logger.info(f"Task {task_id}: RAG processing completed for document {document_id}.")
+
+        # Check if both tasks are completed and update overall status
+        _check_and_update_overall_status(task_id)
 
     except Exception as e:
         logger.error(f"Task {task_id}: RAG processing failed for document {document_id}: {e}", exc_info=True)
-        _update_task_status(task_id, {'rag_status': 'failed', 'error_message': str(e), 'overall_status': 'failed'})
+        _update_task_status(task_id, {'rag_status': 'failed', 'error_message': str(e)})
+        _check_and_update_overall_status(task_id)  # Check overall status even on failure
         raise self.retry(exc=e) # Re-raise for Celery retry mechanism
     finally:
         pass

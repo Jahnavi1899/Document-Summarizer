@@ -16,16 +16,27 @@ def get_mongodb_client():
     global _mongo_client_instance
     if _mongo_client_instance is None:
         try:
-            username = os.getenv("DB_USER")
-            db_password = os.getenv("DB_PASSWORD") 
-            # uri = f"mongodb+srv://{username}:{db_password}@cluster0.ouq4j.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-            uri = f"mongodb+srv://{username}:{db_password}@cluster0.1h6evjy.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+            # Use the environment variable for URI
+            uri = os.getenv("DB_URI")
+            if not uri:
+                # Fallback to constructing URI from components
+                username = os.getenv("DB_USER")
+                db_password = os.getenv("DB_PASSWORD")
+                cluster_url = os.getenv("DB_CLUSTER_URL", "cluster0.1h6evjy.mongodb.net")
+                uri = f"mongodb+srv://{username}:{db_password}@{cluster_url}/?retryWrites=true&w=majority&appName=Cluster0"
+            
             _mongo_client_instance = MongoClient(
-                os.getenv("DB_URI"),
+                uri,
                 tls=True,
-                tlsAllowInvalidCertificates=True
+                tlsAllowInvalidCertificates=True,
+                serverSelectionTimeoutMS=30000,
+                connectTimeoutMS=30000,
+                socketTimeoutMS=30000
             )
-            print("Connection to db is done")
+            
+            # Test the connection
+            _mongo_client_instance.admin.command('ping')
+            print("Connection to MongoDB is successful")
     
         except Exception as e:
             print(f"Error connecting to MongoDB: {e}")

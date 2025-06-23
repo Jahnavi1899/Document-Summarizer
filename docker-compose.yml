@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Ollama for LLM
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    command: >
+      sh -c "
+        ollama serve &
+        sleep 10 &&
+        ollama pull ${OLLAMA_MODEL:-llama2:1b} &&
+        wait
+      "
+
+  # Celery worker (separate container)
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      - DB_NAME=${DB_NAME:-document_summarizer}
+      - MONGO_URI=${DB_URI}
+      - EMBEDDINGS_COLLECTION_NAME=${EMBEDDINGS_COLLECTION_NAME:-embeddings}
+      - ATLAS_VECTOR_SEARCH_INDEX_NAME=${ATLAS_VECTOR_SEARCH_INDEX_NAME:-vector_index}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama2:1b}
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - redis
+      - ollama
+
+  # FastAPI backend (separate container)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      - DB_NAME=${DB_NAME:-document_summarizer}
+      - MONGO_URI=${DB_URI}
+      - EMBEDDINGS_COLLECTION_NAME=${EMBEDDINGS_COLLECTION_NAME:-embeddings}
+      - ATLAS_VECTOR_SEARCH_INDEX_NAME=${ATLAS_VECTOR_SEARCH_INDEX_NAME:-vector_index}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama2:1b}
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      - redis
+      - ollama
+      - worker
+
+  # React frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  redis_data:
+  ollama_data: 

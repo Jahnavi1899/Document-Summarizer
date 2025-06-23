@@ -1,25 +1,11 @@
 import React from 'react';
 import './App.css';
-import {SharedProvider} from './SharedContext'
-import DocumentUpload from './components/DocumentUpload'
-import Summary from './components/Summary'
-import ChatBot from './components/ChatBot'
+import { SharedProvider } from './SharedContext';
+import DocumentUpload from './components/DocumentUpload';
+import Summary from './components/Summary';
+import ChatBot from './components/ChatBot';
 
-// export const NameContext = createContext();
- 
-// // Create a Context Provider
-// const NameContextProvider = ({ children }) => {
-//     const [summary, setSummary] = useState(undefined);
- 
-//     return (
-//         <NameContext.Provider value={{ summary, setSummary }}>
-//             {children}
-//         </NameContext.Provider>
-//     );
-// };
-
-export default function App(){
-  // const [summary, setSummary] = useState('')
+const App: React.FC = () => {
   return (
     <>
       <div className="container-fluid">
@@ -41,7 +27,7 @@ export default function App(){
         </SharedProvider>
       </div>
     </>
-  )
-  
+  );
+};
 
-}
+export default App; 

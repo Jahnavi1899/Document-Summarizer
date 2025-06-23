@@ -5,10 +5,9 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_core.prompts import ChatPromptTemplate
 from app_backend.llm_config import get_llm, get_embedding_model
-from app_backend.db import get_vector_store
+from app_backend.db import get_vector_store, get_mongodb_client
 from langchain.schema.retriever import BaseRetriever # For CustomRetriever
 from langchain_core.documents import Document # For Document object in custom retriever
-from pymongo import MongoClient # For direct mongo access in custom retriever
 from langchain_mongodb import MongoDBAtlasVectorSearch
 
 logger = logging.getLogger(__name__)
@@ -31,38 +30,60 @@ class CustomDocumentIdRetriever(BaseRetriever):
         return await self._get_relevant_documents(query)
 
     def _get_relevant_documents(self, query: str) -> list[Document]:
-        client = None
         try:
-            client = MongoClient(os.getenv("MONGODB_ATLAS_URI")) # New client for this call
-            # Use the global embedding model or create a new one here if necessary
+            logger.info(f"Retriever called with query: '{query}' for document_id: {self.document_id_filter}")
+            
+            # 1. Convert input question to embedding using the same model
             embedding_model = get_embedding_model_for_retriever()
             query_embedding = embedding_model.embed_query(query)
+            logger.info(f"Query converted to embedding with length: {len(query_embedding)}")
             
-            collection = client[os.getenv("DB_NAME")][os.getenv("MONGODB_COLLECTION_NAME")]
+            # 2. Fetch top 5 closest embedding documents from DB for the given file
+            client = get_mongodb_client()
+            collection = client[os.getenv("DB_NAME")][os.getenv("EMBEDDINGS_COLLECTION_NAME")]
             
-            # The Atlas Vector Search aggregation pipeline
-            results = collection.aggregate([
+            # Use MongoDB Atlas Vector Search to find closest embeddings
+            pipeline = [
                 {
                     "$vectorSearch": {
                         "queryVector": query_embedding,
                         "path": "embedding",
-                        "numCandidates": 100, # Number of nearest neighbors to consider
-                        "limit": 5,           # Number of results to return
-                        "index": os.getenv("MONGODB_VECTOR_INDEX_NAME"),
-                        "filter": { "document_id": self.document_id_filter } # Apply the filter here
+                        "numCandidates": 100,
+                        "limit": 5,
+                        "index": os.getenv("ATLAS_VECTOR_SEARCH_INDEX_NAME"),
+                        "filter": {"document_id": self.document_id_filter}
                     }
                 },
-                { "$project": { "_id": 0, "page_content": "$text", "metadata": "$metadata" } } # Project for LangChain Document format
-            ])
+                {"$project": {"_id": 0, "text": 1, "document_id": 1, "source": 1, "page": 1}}
+            ]
             
-            # Convert MongoDB results to LangChain Document objects
-            return [Document(page_content=r['page_content'], metadata=r.get('metadata', {})) for r in results]
+            results = list(collection.aggregate(pipeline))
+            logger.info(f"Found {len(results)} closest documents")
+            
+            # 3. Convert to LangChain Document objects
+            documents = []
+            for result in results:
+                if 'text' in result and result['text']:
+                    # Create metadata from the actual fields
+                    metadata = {
+                        "document_id": result.get("document_id"),
+                        "source": result.get("source"),
+                        "page": result.get("page")
+                    }
+                    
+                    doc = Document(
+                        page_content=result['text'],
+                        metadata=metadata
+                    )
+                    documents.append(doc)
+                    logger.info(f"Added document with content: {result['text'][:100]}...")
+            
+            logger.info(f"Returning {len(documents)} documents as context")
+            return documents
+            
         except Exception as e:
             logger.error(f"Error in custom retriever: {e}", exc_info=True)
-            return [] # Return empty list on error
-        finally:
-            if client:
-                client.close()
+            return []
 
 
 def get_conversational_rag_chain(document_id: str): # Now accepts document_id
@@ -74,7 +95,12 @@ def get_conversational_rag_chain(document_id: str): # Now accepts document_id
 
     # Initialize memory (stores last 'k' interactions for a given chain instance)
     # This memory is per-request, NOT persistent across user sessions yet.
-    memory = ConversationBufferWindowMemory(memory_key="chat_history", return_messages=True, k=5)
+    memory = ConversationBufferWindowMemory(
+        memory_key="chat_history", 
+        return_messages=True, 
+        k=5,
+        output_key="answer"  # Explicitly set which key to store from chain output
+    )
 
     # Use our custom retriever for document_id filtering
     retriever = CustomDocumentIdRetriever(
@@ -84,7 +110,20 @@ def get_conversational_rag_chain(document_id: str): # Now accepts document_id
 
     # This prompt is crucial for integrating chat history
     qa_prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a helpful assistant. Answer the user's question based ONLY on the following context and the conversation history. If the answer is not found in the context, clearly state 'I cannot answer this question based on the provided document(s).'. Do not make up answers.\n\nChat History:\n{chat_history}\n\nContext:\n{context}"),
+        ("system", """You are a helpful assistant that answers questions based ONLY on the provided context from a document. 
+
+IMPORTANT RULES:
+1. Answer ONLY using information from the provided context
+2. If the answer is not in the context, say "I cannot answer this question based on the provided document."
+3. Do not make up or infer information not explicitly stated in the context
+4. Be precise and accurate in your responses
+5. If the context is insufficient, acknowledge the limitations
+
+Context: {context}
+
+Chat History: {chat_history}
+
+Question: {question}"""),
         ("human", "{question}"), # Aligned with ConversationalRetrievalChain's expected key
     ])
     

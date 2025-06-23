@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Environment files
+.env*
+
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Temporary files
+uploads/
+app_data/ 
